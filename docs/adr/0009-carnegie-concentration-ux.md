@@ -28,3 +28,9 @@ competed with the CTA for visual attention.
 
 E2e and prompt fixtures updated to new French copy. Marketing honesty preserved
 (homepage checklist, not global authority).
+
+## Follow-up (2026-07-30)
+
+Closed post-ship findings F1/F2/F4/F7: footer + subcopy restore homepage scope;
+mock moved after CTA in DOM at opacity ~0.4 without « Corriger avec l’IA »;
+rise-in delays shortened + `prefers-reduced-motion`.
