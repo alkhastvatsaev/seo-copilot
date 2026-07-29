@@ -87,17 +87,23 @@ export function IssueCard({
           {difficulty}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4 pl-7 text-sm">
+      <CardContent className="space-y-3 pl-7 text-sm">
         <div>
-          <p className="font-medium">Pourquoi c&apos;est un problème</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Pourquoi
+          </p>
           <p className="mt-1 text-muted-foreground">{why}</p>
         </div>
         <div>
-          <p className="font-medium">Impact</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Impact
+          </p>
           <p className="mt-1 text-muted-foreground">{impact}</p>
         </div>
         <div>
-          <p className="font-medium">Comment corriger</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Correction
+          </p>
           <p className="mt-1 text-muted-foreground">
             {aiFixResult?.summary ?? howToFix}
           </p>
@@ -143,7 +149,7 @@ export function IssueCard({
             type="button"
             onClick={onFixWithAi}
             disabled={isFixing}
-            className="w-full bg-primary text-primary-foreground sm:w-auto"
+            className="mt-1 w-full bg-[var(--accent)] text-accent-foreground hover:bg-[var(--accent)]/90 sm:w-auto"
           >
             <Sparkles />
             {isFixing ? "Génération…" : "Corriger avec l'IA"}

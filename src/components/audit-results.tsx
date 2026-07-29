@@ -40,7 +40,7 @@ export function AuditResults({
     if (!isPending) return;
     const timer = setInterval(() => {
       router.refresh();
-    }, 2500);
+    }, 2000);
     return () => clearInterval(timer);
   }, [isPending, router]);
 
@@ -54,7 +54,7 @@ export function AuditResults({
     try {
       const response = await fetch(
         `/api/audits/${initialAudit.id}/issues/${encodeURIComponent(issue.id)}/fix`,
-        { method: "POST" },
+        { method: "POST", credentials: "same-origin" },
       );
       const json = (await response.json()) as
         | { data: IssueAiFixResult }
@@ -93,11 +93,9 @@ export function AuditResults({
   if (initialAudit.status === "failed") {
     return (
       <div className="space-y-4" role="alert">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
-          {initialAudit.domain}
-        </p>
+        <p className="text-sm text-muted-foreground">{initialAudit.domain}</p>
         <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight sm:text-4xl">
-          Audit échoué
+          Impossible d&apos;auditer ce site
         </h1>
         <p className="max-w-xl text-muted-foreground">
           {initialAudit.errorMessage ?? "Une erreur est survenue."}
@@ -108,20 +106,15 @@ export function AuditResults({
 
   if (isPending) {
     return (
-      <div className="space-y-6" aria-busy="true" aria-live="polite">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
-          {initialAudit.domain}
-        </p>
+      <div className="space-y-5" aria-busy="true" aria-live="polite">
+        <p className="text-sm text-muted-foreground">{initialAudit.domain}</p>
         <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight sm:text-4xl">
           Analyse en cours…
         </h1>
-        <div className="h-2 max-w-md overflow-hidden rounded-full bg-muted">
+        <div className="h-2 max-w-sm overflow-hidden rounded-full bg-muted">
           <div className="h-full w-1/3 animate-pulse rounded-full bg-[color:var(--ring)]" />
         </div>
-        <p className="text-muted-foreground">
-          Crawl et détection des problèmes. Cette page se met à jour
-          automatiquement.
-        </p>
+        <p className="text-muted-foreground">Quelques secondes.</p>
       </div>
     );
   }
@@ -162,24 +155,18 @@ export function AuditResults({
   }
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-10">
       <section className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-3">
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            {initialAudit.domain}
-          </p>
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">{initialAudit.domain}</p>
           <h1 className="font-[family-name:var(--font-display)] text-4xl font-bold tracking-tight sm:text-5xl">
-            Votre score SEO
+            Votre score
           </h1>
-        <p className="max-w-xl text-muted-foreground">
-          {initialAudit.issues.length === 0
-            ? "Aucun problème technique majeur détecté sur la page d'accueil."
-            : `${initialAudit.issues.length} problème(s) détecté(s) — commencez par les 3 actions ci-dessous.`}
-        </p>
-        <p className="text-sm text-muted-foreground">
-          Score checklist technique (homepage crawlée) — pas un classement SEO
-          global du site.
-        </p>
+          <p className="max-w-xl text-muted-foreground">
+            {initialAudit.issues.length === 0
+              ? "Rien de bloquant sur la page d'accueil."
+              : `${initialAudit.issues.length} point(s) à améliorer — commencez par ceux-ci.`}
+          </p>
         </div>
         {typeof initialAudit.score === "number" && (
           <ScoreRing score={initialAudit.score} />
@@ -187,33 +174,32 @@ export function AuditResults({
       </section>
 
       {priorityIssues.length > 0 && (
-        <section aria-labelledby="priority-actions" className="space-y-5">
+        <section aria-labelledby="priority-actions" className="space-y-4">
           <h2
             id="priority-actions"
             className="font-[family-name:var(--font-display)] text-2xl font-semibold"
           >
-            3 actions prioritaires
+            À faire en premier
           </h2>
           <div className="space-y-4">{priorityIssues.map(renderIssue)}</div>
         </section>
       )}
 
       {otherIssues.length > 0 && (
-        <section aria-labelledby="all-issues" className="space-y-5">
-          <h2
-            id="all-issues"
-            className="font-[family-name:var(--font-display)] text-2xl font-semibold"
-          >
-            Détail des autres problèmes
-          </h2>
-          <div className="space-y-4">{otherIssues.map(renderIssue)}</div>
-        </section>
+        <details className="group space-y-4">
+          <summary className="cursor-pointer font-[family-name:var(--font-display)] text-xl font-semibold list-none [&::-webkit-details-marker]:hidden">
+            <span className="underline-offset-4 group-open:underline">
+              Autres points ({otherIssues.length})
+            </span>
+          </summary>
+          <div className="space-y-4 pt-2">{otherIssues.map(renderIssue)}</div>
+        </details>
       )}
 
       {initialAudit.issues.length === 0 && (
-        <p className="rounded-xl border bg-card p-6 text-muted-foreground">
-          Rien à corriger sur les contrôles techniques de base de la homepage.
-          Les modules contenu, Core Web Vitals et UX/CRO arriveront ensuite.
+        <p className="text-muted-foreground">
+          Tout est bon sur les contrôles de base. Relancez un audit après vos
+          prochaines modifs.
         </p>
       )}
     </div>

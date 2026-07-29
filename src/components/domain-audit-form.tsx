@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,10 +25,15 @@ export function DomainAuditForm({
   className,
 }: DomainAuditFormProps) {
   const router = useRouter();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [domain, setDomain] = useState("");
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [formState, setFormState] = useState<FormState>({ status: "idle" });
   const isHero = variant === "hero";
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -36,10 +41,13 @@ export function DomainAuditForm({
 
     const parsed = domainInputSchema.safeParse({ domain });
     if (!parsed.success) {
-      setFieldError(parsed.error.issues[0]?.message ?? "Domaine invalide");
+      setFieldError(
+        parsed.error.issues[0]?.message ?? "Indiquez un domaine valide",
+      );
       return;
     }
 
+    setDomain(parsed.data.domain);
     setFormState({ status: "loading" });
 
     try {
@@ -84,27 +92,34 @@ export function DomainAuditForm({
       <div className="space-y-2">
         <Label
           htmlFor="domain"
-          className={cn(isHero && "text-white/80")}
+          className={cn(isHero && "sr-only")}
         >
-          Domaine à auditer
+          Votre domaine
         </Label>
         <div
           className={cn(
             "flex flex-col gap-2 sm:flex-row sm:items-stretch",
-            isHero && "rounded-xl bg-white/10 p-2 ring-1 ring-white/15 backdrop-blur-md",
+            isHero &&
+              "rounded-xl bg-white/10 p-2 ring-1 ring-white/15 backdrop-blur-md",
           )}
         >
           <Input
+            ref={inputRef}
             id="domain"
             name="domain"
             type="text"
+            inputMode="url"
+            enterKeyHint="go"
             placeholder="exemple.com"
             autoComplete="url"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             value={domain}
             onChange={(event) => setDomain(event.target.value)}
             disabled={formState.status === "loading"}
             aria-invalid={fieldError ? true : undefined}
-            aria-describedby={fieldError ? "domain-error" : "domain-hint"}
+            aria-describedby={fieldError ? "domain-error" : undefined}
             className={cn(
               "h-12 text-base",
               isHero &&
@@ -121,19 +136,10 @@ export function DomainAuditForm({
                 "bg-[var(--accent)] text-accent-foreground hover:bg-[var(--accent)]/90",
             )}
           >
-            {formState.status === "loading" ? "Analyse…" : "Lancer l'audit"}
+            {formState.status === "loading" ? "Analyse…" : "Auditer"}
             {formState.status !== "loading" && <ArrowRight />}
           </Button>
         </div>
-        <p
-          id="domain-hint"
-          className={cn(
-            "text-sm",
-            isHero ? "text-white/50" : "text-muted-foreground",
-          )}
-        >
-          Sans https:// — uniquement le nom de domaine.
-        </p>
         {fieldError && (
           <p
             id="domain-error"
@@ -164,7 +170,6 @@ export function DomainAuditForm({
               isHero ? "text-white/60" : "text-muted-foreground",
             )}
           >
-            Pas de base locale ?{" "}
             <Link
               href="/audits/demo"
               className={cn(
@@ -172,7 +177,7 @@ export function DomainAuditForm({
                 isHero ? "text-white" : "text-foreground",
               )}
             >
-              Voir l&apos;exemple d&apos;audit
+              Voir un exemple d&apos;audit
             </Link>
           </p>
         </div>

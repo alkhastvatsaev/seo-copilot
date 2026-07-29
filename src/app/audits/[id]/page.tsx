@@ -35,12 +35,12 @@ export default async function AuditPage({ params }: PageProps) {
 
   return (
     <div className="flex flex-1 flex-col bg-background">
-      <SiteHeader />
+      <SiteHeader showDemoLink />
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6 sm:py-14">
         <AuditResults initialAudit={audit} />
         <p className="mt-12 text-sm text-muted-foreground">
           <Link href="/" className="underline underline-offset-2">
-            Lancer un autre audit
+            Auditer un autre site
           </Link>
         </p>
       </main>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { AuditResults } from "@/components/audit-results";
 import { SiteHeader } from "@/components/site-header";
 import { getDemoAudit } from "@/lib/audits/demo-audit";
@@ -13,11 +14,14 @@ export default function DemoAuditPage() {
 
   return (
     <div className="flex flex-1 flex-col bg-background">
-      <SiteHeader />
+      <SiteHeader showDemoLink />
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6 sm:py-14">
-        <p className="mb-8 rounded-lg border border-[color:var(--ring)]/40 bg-[color:var(--accent)]/20 px-4 py-3 text-sm">
-          Exemple statique — aucun crawl réel. Lancez un audit depuis l&apos;accueil
-          pour analyser votre domaine.
+        <p className="mb-8 text-sm text-muted-foreground">
+          Exemple —{" "}
+          <Link href="/" className="underline underline-offset-2">
+            auditez votre domaine
+          </Link>{" "}
+          pour un vrai crawl.
         </p>
         <AuditResults initialAudit={audit} enableAiFix={false} />
       </main>

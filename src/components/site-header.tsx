@@ -1,19 +1,20 @@
 import Link from "next/link";
-import { auth, isGoogleAuthEnabled, signIn, signOut } from "@/auth";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type SiteHeaderProps = {
   className?: string;
   tone?: "light" | "dark";
+  /** Show demo link — off on landing to keep one CTA. */
+  showDemoLink?: boolean;
 };
 
-export async function SiteHeader({
+/** Minimal header: brand only by default (v1 conversion — no auth friction). */
+export function SiteHeader({
   className,
   tone = "light",
+  showDemoLink = false,
 }: SiteHeaderProps) {
   const isDark = tone === "dark";
-  const session = isGoogleAuthEnabled ? await auth() : null;
 
   return (
     <header className={cn("relative z-20", className)}>
@@ -27,7 +28,7 @@ export async function SiteHeader({
         >
           SEO Copilot
         </Link>
-        <nav className="flex items-center gap-3 sm:gap-4">
+        {showDemoLink && (
           <Link
             href="/audits/demo"
             className={cn(
@@ -35,55 +36,9 @@ export async function SiteHeader({
               isDark ? "text-white/70" : "text-muted-foreground",
             )}
           >
-            Voir un exemple
+            Exemple
           </Link>
-          {isGoogleAuthEnabled && !session?.user && (
-            <form
-              action={async () => {
-                "use server";
-                await signIn("google", { redirectTo: "/" });
-              }}
-            >
-              <Button
-                type="submit"
-                variant="outline"
-                size="sm"
-                className={cn(
-                  isDark &&
-                    "border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white",
-                )}
-              >
-                Connexion
-              </Button>
-            </form>
-          )}
-          {session?.user && (
-            <form
-              action={async () => {
-                "use server";
-                await signOut({ redirectTo: "/" });
-              }}
-              className="flex items-center gap-2"
-            >
-              <span
-                className={cn(
-                  "hidden max-w-[10rem] truncate text-sm sm:inline",
-                  isDark ? "text-white/60" : "text-muted-foreground",
-                )}
-              >
-                {session.user.name ?? session.user.email}
-              </span>
-              <Button
-                type="submit"
-                variant="outline"
-                size="sm"
-                className={cn(isDark && "border-transparent text-white/80 hover:bg-white/10")}
-              >
-                Déconnexion
-              </Button>
-            </form>
-          )}
-        </nav>
+        )}
       </div>
     </header>
   );

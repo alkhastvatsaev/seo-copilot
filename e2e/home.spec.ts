@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("landing shows brand hero and domain field", async ({ page }) => {
+test("landing is a single CTA: brand + domain + audit", async ({ page }) => {
   await page.goto("/");
 
   await expect(
@@ -8,24 +8,25 @@ test("landing shows brand hero and domain field", async ({ page }) => {
   ).toBeVisible();
   await expect(
     page.getByRole("heading", {
-      name: /comprenez et corrigez votre seo/i,
+      name: /audit seo gratuit/i,
     }),
   ).toBeVisible();
-  await expect(page.getByLabel("Domaine à auditer")).toBeVisible();
+  await expect(page.getByLabel("Votre domaine")).toBeVisible();
+  await expect(page.getByRole("button", { name: /^auditer$/i })).toBeVisible();
+  await expect(page.getByRole("button", { name: /connexion/i })).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: /lancer l'audit/i }),
-  ).toBeVisible();
-  await expect(page.getByRole("heading", { name: /inclus aujourd/i })).toBeVisible();
+    page.getByRole("heading", { name: /inclus aujourd/i }),
+  ).toHaveCount(0);
 });
 
 test("demo audit shows score and issue cards", async ({ page }) => {
   await page.goto("/audits/demo");
 
   await expect(
-    page.getByRole("heading", { name: /votre score seo/i }),
+    page.getByRole("heading", { name: /votre score/i }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: /3 actions prioritaires/i }),
+    page.getByRole("heading", { name: /à faire en premier/i }),
   ).toBeVisible();
   await expect(
     page.getByText(/meta description manquante/i).first(),
@@ -37,16 +38,16 @@ test("full audit flow on example.com", async ({ page }) => {
 
   await page.goto("/");
   await page.waitForLoadState("networkidle");
-  await expect(page.getByLabel("Domaine à auditer")).toBeVisible();
+  await expect(page.getByLabel("Votre domaine")).toBeVisible();
 
-  await page.getByLabel("Domaine à auditer").fill("example.com");
+  await page.getByLabel("Votre domaine").fill("https://example.com/foo");
 
   const createResponse = page.waitForResponse(
     (response) =>
       response.url().includes("/api/audits") &&
       response.request().method() === "POST",
   );
-  await page.getByRole("button", { name: /lancer l'audit/i }).click();
+  await page.getByRole("button", { name: /^auditer$/i }).click();
   const created = await createResponse;
   expect(created.status()).toBe(202);
   const body = (await created.json()) as { data: { auditId: string } };
@@ -59,7 +60,7 @@ test("full audit flow on example.com", async ({ page }) => {
   });
 
   await expect(
-    page.getByRole("heading", { name: /votre score seo/i }),
+    page.getByRole("heading", { name: /votre score/i }),
   ).toBeVisible({ timeout: 90_000 });
 
   await expect(page.getByText("example.com").first()).toBeVisible();
