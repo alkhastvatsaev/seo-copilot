@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1785330032819,
+      "tag": "0000_closed_talon",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1785330748680,
+      "tag": "0001_normal_meltdown",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785336000000,
+      "tag": "0002_audit_access_token",
+      "breakpoints": true
+    }
+  ]
+}

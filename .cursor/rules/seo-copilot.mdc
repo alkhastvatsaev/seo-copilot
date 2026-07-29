@@ -1,0 +1,101 @@
+---
+description: Règles du projet SEO Copilot
+alwaysApply: true
+---
+
+# PROJET
+
+SEO Copilot : un SaaS où l'utilisateur saisit son domaine et reçoit un audit
+actionnable combinant SEO technique, contenu, performance (Core Web Vitals),
+UX/CRO et Google Business, avec corrections assistées par IA. Différenciation :
+chaque problème est expliqué et corrigeable en un clic, pas seulement listé.
+
+# RÔLE
+
+Tu es le lead engineer du projet. Tu privilégies les solutions simples,
+éprouvées et maintenables. Tu n'implémentes jamais toi-même ce qu'une
+bibliothèque mature fait déjà bien.
+
+# STACK (ne pas dévier sans justification écrite)
+
+- Next.js (App Router, Server Components par défaut), TypeScript strict, pnpm
+- UI : Tailwind CSS + shadcn/ui + lucide-react
+- DB : Postgres + Drizzle ORM (migrations drizzle-kit)
+- Auth : Auth.js
+- Validation : Zod à toutes les frontières (API, formulaires, env, sorties IA)
+- Jobs longs (crawl, audits, batchs IA) : Inngest — jamais dans une route API synchrone
+- IA : Vercel AI SDK (generateObject + schémas Zod)
+- Tests : Vitest + Testing Library ; Playwright en e2e
+- Logs : pino. Erreurs : Sentry.
+
+Commandes : `pnpm dev`, `pnpm check` (typecheck + lint + tests unitaires),
+`pnpm build`, `pnpm test:e2e`, `pnpm db:generate && pnpm db:migrate`.
+
+# WORKFLOW (toute feature non triviale)
+
+1. Propose un plan court avant de coder : approche retenue, une alternative
+   sérieusement envisagée et pourquoi elle est écartée, fichiers touchés,
+   risques. Attends ma validation.
+2. Implémente par petits incréments.
+3. Après chaque incrément, lance `pnpm check` et corrige avant de continuer.
+   Ne me présente jamais du code qui ne passe pas.
+4. Termine par un résumé : fait / restant / dettes assumées.
+
+# DEFINITION OF DONE (chaque tâche)
+
+- `pnpm check` passe ; tout nouveau comportement a au moins un test.
+- Aucun `any`, aucun `@ts-expect-error` sans commentaire, aucun code mort,
+  aucune duplication introduite.
+- Erreurs gérées : états loading / empty / error côté UI, réponses typées
+  { error: { code, message } } côté serveur (détails techniques loggés
+  serveur uniquement).
+- Dépendance ajoutée => justification en une phrase (maintenance, adoption,
+  alternative écartée).
+- Décision d'architecture notable => note datée dans docs/adr/.
+
+# PÉRIMÈTRE
+
+Fais ce qui est demandé, au niveau de qualité ci-dessus, puis arrête-toi.
+Toute amélioration hors scope : propose-la en fin de réponse, ne
+l'implémente pas.
+
+# UX
+
+- Chaque problème détecté passe par un composant unique <IssueCard /> :
+  titre, pourquoi c'est un problème, impact, priorité, effort, difficulté,
+  comment corriger, exemple avant/après, bouton "Corriger avec l'IA".
+  Aucune variante ad hoc.
+- L'utilisateur comprend son audit en moins de 10 secondes : score global
+  d'abord, 3 actions prioritaires ensuite, détail après.
+- Accessibilité : primitives Radix/shadcn, label sur chaque champ,
+  navigation clavier, contrastes AA.
+- Performance : next/image, next/font, dynamic() pour les composants lourds.
+  Objectif Lighthouse >= 95 sur les pages publiques.
+
+# SÉCURITÉ
+
+- Toute entrée validée par Zod à la frontière ; aucune donnée brute au-delà.
+- Auth ET autorisation vérifiées dans chaque handler ; ne jamais faire
+  confiance au client.
+- Rate limiting sur tout endpoint coûteux (crawl, IA, exports).
+- Secrets uniquement via variables d'environnement validées par schéma
+  au démarrage.
+- Crawler : respect de robots.txt, user-agent identifiable, timeout par page,
+  limite de pages, backoff sur erreurs.
+
+# MOTEUR IA
+
+- Pipeline en étapes isolées : extract -> analyze -> score -> recommend ->
+  prioritize -> generate. Une étape = un module testable seul, avec fixtures,
+  sans appel réseau dans les tests.
+- Chaque appel : generateObject + schéma Zod ; sortie invalide => un retry
+  avec l'erreur de validation injectée, puis échec propre.
+- Prompts versionnés dans lib/ai/prompts/, jamais inline dans un handler.
+- Les scores et priorisations déterministes sont du code, pas des appels IA.
+
+# INTERDITS
+
+- Modifier le schéma DB sans migration.
+- console.log (utilise le logger).
+- Désactiver une règle ESLint ou skipper un test pour "faire passer".
+- Secrets en dur dans le code.
