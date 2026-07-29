@@ -16,7 +16,7 @@ export type IssueAiFixResult = {
   summary: string;
   steps: string[];
   snippet: string;
-  beforeSnippet?: string;
+  beforeSnippet?: string | null;
 };
 
 export type IssueCardProps = {
