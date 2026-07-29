@@ -16,8 +16,8 @@ export const aiFixSuggestionSchema = z.object({
     .describe("Exemple de code ou markup corrigé, prêt à coller"),
   beforeSnippet: z
     .string()
-    .optional()
-    .describe("Exemple avant correction si pertinent"),
+    .nullable()
+    .describe("Exemple avant correction si pertinent, sinon null"),
 });
 
 export type AiFixSuggestion = z.infer<typeof aiFixSuggestionSchema>;
