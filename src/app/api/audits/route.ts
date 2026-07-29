@@ -47,27 +47,25 @@ export async function POST(request: Request) {
     const audit = await createAuditRecord(parsed.data.domain, hash);
 
     let queuedViaInngest = false;
-    try {
-      await inngest.send({
-        name: "audit/run",
-        data: { auditId: audit.id },
-      });
-      queuedViaInngest = true;
-    } catch (sendError) {
-      logger.warn(
-        { err: sendError, auditId: audit.id },
-        "inngest send failed",
-      );
-      if (env.NODE_ENV !== "development") {
-        throw sendError;
+    if (env.INNGEST_EVENT_KEY) {
+      try {
+        await inngest.send({
+          name: "audit/run",
+          data: { auditId: audit.id },
+        });
+        queuedViaInngest = true;
+      } catch (sendError) {
+        logger.warn(
+          { err: sendError, auditId: audit.id },
+          "inngest send failed — falling back to after()",
+        );
       }
     }
 
-    if (env.NODE_ENV === "development") {
+    // Vercel `after()` keeps the crawl off the critical request path when Inngest is unset.
+    if (!queuedViaInngest) {
       after(() => executeAuditRun({ auditId: audit.id }));
-      if (!queuedViaInngest) {
-        logger.info({ auditId: audit.id }, "audit scheduled via after()");
-      }
+      logger.info({ auditId: audit.id }, "audit scheduled via after()");
     }
 
     return Response.json(
