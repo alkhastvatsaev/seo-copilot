@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-test("landing is a single CTA: brand + domain + audit", async ({ page }) => {
+test("landing is a single CTA: brand + domain + score desire", async ({
+  page,
+}) => {
   await page.goto("/");
 
   await expect(
@@ -8,11 +10,13 @@ test("landing is a single CTA: brand + domain + audit", async ({ page }) => {
   ).toBeVisible();
   await expect(
     page.getByRole("heading", {
-      name: /audit seo gratuit/i,
+      name: /faites trouver votre entreprise/i,
     }),
   ).toBeVisible();
   await expect(page.getByLabel("Votre domaine")).toBeVisible();
-  await expect(page.getByRole("button", { name: /^auditer$/i })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /voir mon score/i }),
+  ).toBeVisible();
   await expect(page.getByRole("button", { name: /connexion/i })).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: /inclus aujourd/i }),
@@ -26,10 +30,10 @@ test("demo audit shows score and issue cards", async ({ page }) => {
     page.getByRole("heading", { name: /votre score/i }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: /à faire en premier/i }),
+    page.getByRole("heading", { name: /commencez par ici/i }),
   ).toBeVisible();
   await expect(
-    page.getByText(/meta description manquante/i).first(),
+    page.getByText(/description google à rédiger/i).first(),
   ).toBeVisible();
 });
 
@@ -47,7 +51,7 @@ test("full audit flow on example.com", async ({ page }) => {
       response.url().includes("/api/audits") &&
       response.request().method() === "POST",
   );
-  await page.getByRole("button", { name: /^auditer$/i }).click();
+  await page.getByRole("button", { name: /voir mon score/i }).click();
   const created = await createResponse;
   expect(created.status()).toBe(202);
   const body = (await created.json()) as { data: { auditId: string } };

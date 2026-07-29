@@ -10,6 +10,10 @@ function issue(
   };
 }
 
+/**
+ * Deterministic issue detection — Dale Carnegie tone:
+ * opportunity framing, visitor interest, no condemnation.
+ */
 export function analyzePageExtract(extract: PageExtract): AuditIssue[] {
   const issues: AuditIssue[] = [];
 
@@ -18,13 +22,13 @@ export function analyzePageExtract(extract: PageExtract): AuditIssue[] {
       issue({
         code: "http_error",
         title: `La page répond en HTTP ${extract.status}`,
-        why: "Une page d'accueil en erreur ne peut pas être indexée correctement.",
-        impact: "Perte de visibilité organique et mauvaise première impression.",
+        why: "Quand la page d’accueil ne répond pas correctement, Google et vos visiteurs peinent à vous trouver.",
+        impact: "Première impression et indexation à rétablir en priorité.",
         priority: "critical",
         effort: "high",
         difficulty: "high",
         howToFix:
-          "Corrigez la cause serveur (DNS, certificat, application) pour obtenir un 200.",
+          "Vérifiez DNS, certificat et application pour obtenir une réponse 200.",
       }),
     );
   }
@@ -33,9 +37,9 @@ export function analyzePageExtract(extract: PageExtract): AuditIssue[] {
     issues.push(
       issue({
         code: "no_https",
-        title: "Le site n'est pas servi en HTTPS",
-        why: "Google privilégie le HTTPS ; les navigateurs marquent HTTP comme non sécurisé.",
-        impact: "Confiance utilisateur et signal de ranking dégradés.",
+        title: "Passer en HTTPS pour rassurer vos visiteurs",
+        why: "Les navigateurs signalent HTTP comme non sécurisé — la confiance se joue en une seconde.",
+        impact: "Plus de sérénité pour vos clients et un signal positif pour Google.",
         priority: "critical",
         effort: "medium",
         difficulty: "medium",
@@ -51,14 +55,14 @@ export function analyzePageExtract(extract: PageExtract): AuditIssue[] {
     issues.push(
       issue({
         code: "missing_title",
-        title: "Balise title manquante",
-        why: "Le title est le principal signal on-page pour le snippet SERP.",
-        impact: "CTR faible et compréhension du sujet dégradée par Google.",
+        title: "Titre de page à ajouter",
+        why: "Le titre est ce que vos clients voient en premier dans Google — c’est votre poignée de main.",
+        impact: "Sans titre, Google invente souvent un extrait moins convaincant.",
         priority: "critical",
         effort: "low",
         difficulty: "low",
         howToFix:
-          "Ajoutez une balise <title> unique, descriptive, ~50–60 caractères.",
+          "Ajoutez une balise <title> claire, unique, ~50–60 caractères.",
         beforeExample: "(aucune balise title)",
         afterExample: "<title>Agence SEO à Lyon | Nom de marque</title>",
       }),
@@ -70,20 +74,20 @@ export function analyzePageExtract(extract: PageExtract): AuditIssue[] {
       issue({
         code: "title_too_short",
         title: shortBrandTitle
-          ? "Title court (nom de marque)"
-          : "Title trop court",
+          ? "Titre marque — possible à enrichir"
+          : "Titre à enrichir",
         why: shortBrandTitle
-          ? `Le title « ${extract.title} » est volontairement minimal — utile pour une marque très connue, mais souvent sous-optimal pour le CTR sur un site business.`
-          : `Le title fait ${extract.title.length} caractères — peu de contexte pour le snippet.`,
+          ? `Le titre « ${extract.title} » est minimal — parfait pour une marque très connue, souvent perfectible pour attirer plus de clics.`
+          : `Votre titre fait ${extract.title.length} caractères — il peut mieux raconter ce que vous offrez.`,
         impact: shortBrandTitle
-          ? "CTR potentiellement limité hors notoriété de marque."
-          : "Snippet peu attractif et pertinence thématique limitée.",
+          ? "Hors notoriété de marque, un peu plus de contexte aide souvent le clic."
+          : "Un titre plus clair attire souvent plus de clics qualifiés.",
         priority: shortBrandTitle ? "low" : "medium",
         effort: "low",
         difficulty: "low",
         howToFix: shortBrandTitle
-          ? "Enrichissez vers 50–60 caractères si vous ciblez des requêtes non-brand."
-          : "Allongez le title vers 50–60 caractères avec le mot-clé principal.",
+          ? "Enrichissez vers 50–60 caractères si vous ciblez des recherches hors marque."
+          : "Élargissez vers 50–60 caractères : bénéfice + marque.",
         beforeExample: extract.title,
         afterExample: shortBrandTitle
           ? `${extract.title} — recherche et services`
@@ -94,13 +98,13 @@ export function analyzePageExtract(extract: PageExtract): AuditIssue[] {
     issues.push(
       issue({
         code: "title_too_long",
-        title: "Title trop long",
-        why: `Le title fait ${extract.title.length} caractères et risque d'être tronqué.`,
-        impact: "Snippet SERP coupé, message clé potentiellement invisible.",
+        title: "Titre un peu long pour Google",
+        why: `Votre titre fait ${extract.title.length} caractères — Google peut le raccourcir à l’affichage.`,
+        impact: "Le message important risque d’être coupé pour vos visiteurs.",
         priority: "low",
         effort: "low",
         difficulty: "low",
-        howToFix: "Réduisez le title autour de 50–60 caractères.",
+        howToFix: "Visez ~50–60 caractères en gardant le bénéfice principal en tête.",
         beforeExample: extract.title,
       }),
     );
@@ -110,14 +114,14 @@ export function analyzePageExtract(extract: PageExtract): AuditIssue[] {
     issues.push(
       issue({
         code: "missing_meta_description",
-        title: "Meta description manquante",
-        why: "Sans meta description, Google génère souvent un extrait depuis le contenu visible.",
-        impact: "Moins de contrôle sur le message affiché dans les résultats.",
+        title: "Description Google à rédiger",
+        why: "La meta description est votre courte invitation au clic — sans elle, Google choisit souvent un extrait au hasard.",
+        impact: "Moins de contrôle sur le message qui convainc vos futurs clients.",
         priority: "medium",
         effort: "low",
         difficulty: "low",
         howToFix:
-          "Ajoutez une meta description unique d'environ 140–160 caractères.",
+          "Ajoutez une meta description unique d’environ 140–160 caractères, centrée sur le bénéfice.",
         afterExample:
           '<meta name="description" content="Audit SEO actionnable pour…">',
       }),
@@ -126,13 +130,13 @@ export function analyzePageExtract(extract: PageExtract): AuditIssue[] {
     issues.push(
       issue({
         code: "meta_description_too_short",
-        title: "Meta description trop courte",
-        why: `La description fait ${extract.metaDescription.length} caractères.`,
-        impact: "Espace SERP sous-exploité, moins d'incitation au clic.",
+        title: "Description à développer",
+        why: `Votre description fait ${extract.metaDescription.length} caractères — vous avez de la place pour convaincre.`,
+        impact: "Un extrait plus riche peut améliorer le taux de clic.",
         priority: "low",
         effort: "low",
         difficulty: "low",
-        howToFix: "Enrichissez la description vers 140–160 caractères.",
+        howToFix: "Enrichissez vers 140–160 caractères avec un bénéfice clair.",
         beforeExample: extract.metaDescription,
       }),
     );
@@ -140,13 +144,13 @@ export function analyzePageExtract(extract: PageExtract): AuditIssue[] {
     issues.push(
       issue({
         code: "meta_description_too_long",
-        title: "Meta description trop longue",
-        why: `La description fait ${extract.metaDescription.length} caractères et peut être tronquée.`,
-        impact: "Message marketing coupé dans les résultats de recherche.",
+        title: "Description à raccourcir un peu",
+        why: `Votre description fait ${extract.metaDescription.length} caractères — Google peut la tronquer.`,
+        impact: "La fin du message (souvent l’appel à l’action) peut disparaître.",
         priority: "low",
         effort: "low",
         difficulty: "low",
-        howToFix: "Raccourcissez vers 140–160 caractères.",
+        howToFix: "Raccourcissez vers 140–160 caractères en gardant l’essentiel.",
         beforeExample: extract.metaDescription,
       }),
     );
@@ -157,32 +161,34 @@ export function analyzePageExtract(extract: PageExtract): AuditIssue[] {
     issues.push(
       issue({
         code: "missing_h1",
-        title: utilityUi ? "Pas de H1 (interface utilitaire)" : "Aucun H1 sur la page",
+        title: utilityUi
+          ? "Titre principal (H1) optionnel ici"
+          : "Titre principal (H1) à clarifier",
         why: utilityUi
-          ? "Certaines interfaces (recherche, app) n'utilisent pas un H1 classique — ce n'est pas toujours bloquant."
-          : "Le H1 structure le contenu principal pour utilisateurs et crawlers.",
+          ? "Certaines pages utilitaires n’utilisent pas de H1 classique — ce n’est pas forcément bloquant."
+          : "Le H1 aide vos visiteurs (et Google) à comprendre le sujet en une seconde.",
         impact: utilityUi
-          ? "Impact SEO souvent faible si le title et la structure sont clairs."
-          : "Hiérarchie sémantique faible, sujet de page moins clair.",
+          ? "Impact souvent faible si le title est déjà clair."
+          : "Un H1 net renforce la confiance et la clarté de la page.",
         priority: utilityUi ? "low" : "high",
         effort: "low",
         difficulty: "low",
         howToFix: utilityUi
-          ? "Ajoutez un H1 visible si vous transformez cette page en landing marketing."
-          : "Ajoutez un unique H1 aligné avec l'intention de recherche.",
+          ? "Ajoutez un H1 visible si cette page devient une landing marketing."
+          : "Ajoutez un unique H1 aligné avec ce que cherchent vos clients.",
       }),
     );
   } else if (extract.h1Count > 1) {
     issues.push(
       issue({
         code: "multiple_h1",
-        title: "Plusieurs H1 détectés",
-        why: `La page contient ${extract.h1Count} balises H1.`,
-        impact: "Signal thématique dilué ; structure moins claire.",
+        title: "Un seul titre principal serait plus clair",
+        why: `La page contient ${extract.h1Count} balises H1 — un seul point d’ancrage aide la lecture.`,
+        impact: "Le sujet principal est plus facile à saisir pour vos visiteurs.",
         priority: "medium",
         effort: "low",
         difficulty: "low",
-        howToFix: "Conservez un seul H1 ; rétrogradez les autres en H2/H3.",
+        howToFix: "Gardez un H1 ; transformez les autres en H2/H3.",
       }),
     );
   }
@@ -193,18 +199,18 @@ export function analyzePageExtract(extract: PageExtract): AuditIssue[] {
     issues.push(
       issue({
         code: "missing_viewport",
-        title: "Meta viewport non détectée",
+        title: "Affichage mobile à vérifier",
         why: likelyDynamicMobile
-          ? "Aucune balise viewport dans le HTML initial — l'affichage mobile peut être géré par CSS/JS (à vérifier manuellement)."
-          : "Sans viewport, la page est rarement mobile-friendly.",
+          ? "Aucune balise viewport dans le HTML initial — le mobile peut être géré autrement (à confirmer sur téléphone)."
+          : "Sans viewport, beaucoup de visiteurs mobiles voient une page difficile à lire.",
         impact: likelyDynamicMobile
-          ? "Vérifiez sur mobile réel avant de corriger."
-          : "Expérience mobile dégradée ; signal mobile-first indexing.",
+          ? "Vérifiez sur mobile réel avant de changer quoi que ce soit."
+          : "Une bonne expérience mobile rassure et convertit mieux.",
         priority: likelyDynamicMobile ? "medium" : "high",
         effort: "low",
         difficulty: "low",
         howToFix:
-          'Ajoutez <meta name="viewport" content="width=device-width, initial-scale=1"> si absent côté rendu.',
+          'Ajoutez <meta name="viewport" content="width=device-width, initial-scale=1"> si elle manque au rendu.',
       }),
     );
   }
@@ -213,18 +219,18 @@ export function analyzePageExtract(extract: PageExtract): AuditIssue[] {
     issues.push(
       issue({
         code: "missing_canonical",
-        title: "Canonical manquant",
+        title: "URL de référence à indiquer",
         why: extract.isRootHomepage
-          ? "Sur une homepage, le canonical est recommandé mais moins critique que sur les pages profondes."
-          : "Sans canonical, les variantes d'URL peuvent diluer le ranking.",
+          ? "Sur une homepage, le canonical est un plus — surtout si www et non-www coexistent."
+          : "Le canonical dit à Google quelle version de la page compter.",
         impact: extract.isRootHomepage
-          ? "Risque modéré de duplication www/paramètres."
-          : "Risque de contenu dupliqué entre variantes d'URL.",
+          ? "Réduit le risque de confusion entre variantes d’URL."
+          : "Aide à concentrer la visibilité sur la bonne URL.",
         priority: extract.isRootHomepage ? "low" : "medium",
         effort: "low",
         difficulty: "low",
         howToFix:
-          "Ajoutez un <link rel=\"canonical\"> pointant vers l'URL préférée.",
+          'Ajoutez un <link rel="canonical"> vers l’URL que vous préférez.',
         afterExample: `<link rel="canonical" href="${extract.finalUrl}">`,
       }),
     );
@@ -239,14 +245,14 @@ export function analyzePageExtract(extract: PageExtract): AuditIssue[] {
     issues.push(
       issue({
         code: "images_missing_alt",
-        title: "Images sans attribut alt",
-        why: `${extract.imagesWithoutAlt}/${extract.imageCount} image(s) n'ont pas d'alt.`,
-        impact: "Accessibilité et SEO image dégradés.",
+        title: "Textes alternatifs d’images à compléter",
+        why: `${extract.imagesWithoutAlt}/${extract.imageCount} image(s) n’ont pas d’alt — utile pour l’accessibilité et la compréhension.`,
+        impact: "Vos visiteurs et Google comprennent mieux le contenu visuel.",
         priority: significant ? "medium" : "low",
         effort: "medium",
         difficulty: "low",
         howToFix:
-          "Ajoutez un alt descriptif (ou alt=\"\" si purement décoratif).",
+          'Ajoutez un alt descriptif (ou alt="" si l’image est purement décorative).',
       }),
     );
   }

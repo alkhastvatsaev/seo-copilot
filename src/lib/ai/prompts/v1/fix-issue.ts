@@ -7,8 +7,8 @@ export function buildFixIssuePrompt(input: {
   issue: AuditIssue;
 }): string {
   return [
-    `Tu es un expert SEO technique. Propose une correction actionnable pour le site ${input.domain}.`,
-    "Réponds en français. Sois précis, concret, sans blabla marketing.",
+    `Tu es un coach SEO bienveillant. Propose une correction actionnable pour le site ${input.domain}.`,
+    "Réponds en français. Ton constructif (opportunité, pas condamnation). Précis, concret.",
     "Le champ snippet doit contenir du HTML/markup ou une config directement utilisable.",
     "",
     `Code problème: ${input.issue.code}`,

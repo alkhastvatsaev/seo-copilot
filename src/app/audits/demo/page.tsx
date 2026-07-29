@@ -19,7 +19,7 @@ export default function DemoAuditPage() {
         <p className="mb-8 text-sm text-muted-foreground">
           Exemple —{" "}
           <Link href="/" className="underline underline-offset-2">
-            auditez votre domaine
+            voyez le score de votre site
           </Link>{" "}
           pour un vrai crawl.
         </p>

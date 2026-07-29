@@ -136,7 +136,7 @@ export function DomainAuditForm({
                 "bg-[var(--accent)] text-accent-foreground hover:bg-[var(--accent)]/90",
             )}
           >
-            {formState.status === "loading" ? "Analyse…" : "Auditer"}
+            {formState.status === "loading" ? "Analyse…" : "Voir mon score"}
             {formState.status !== "loading" && <ArrowRight />}
           </Button>
         </div>

@@ -7,6 +7,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  difficultyLabel,
+  effortLabel,
+  priorityLabel,
+} from "@/lib/copy/issue-labels";
 import { cn } from "@/lib/utils";
 
 export type IssuePriority = "critical" | "high" | "medium" | "low";
@@ -34,13 +39,6 @@ export type IssueCardProps = {
   fixError?: string | null;
   aiFixResult?: IssueAiFixResult | null;
   className?: string;
-};
-
-const priorityLabel: Record<IssuePriority, string> = {
-  critical: "Critique",
-  high: "Élevée",
-  medium: "Moyenne",
-  low: "Faible",
 };
 
 const priorityAccent: Record<IssuePriority, string> = {
@@ -83,8 +81,8 @@ export function IssueCard({
           {title}
         </CardTitle>
         <CardDescription>
-          Priorité {priorityLabel[priority]} · Effort {effort} · Difficulté{" "}
-          {difficulty}
+          {priorityLabel(priority)} · Effort {effortLabel(effort)} ·{" "}
+          {difficultyLabel(difficulty)}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 pl-7 text-sm">
@@ -102,7 +100,7 @@ export function IssueCard({
         </div>
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Correction
+            Comment avancer
           </p>
           <p className="mt-1 text-muted-foreground">
             {aiFixResult?.summary ?? howToFix}

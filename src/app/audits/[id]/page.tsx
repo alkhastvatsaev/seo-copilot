@@ -40,7 +40,7 @@ export default async function AuditPage({ params }: PageProps) {
         <AuditResults initialAudit={audit} />
         <p className="mt-12 text-sm text-muted-foreground">
           <Link href="/" className="underline underline-offset-2">
-            Auditer un autre site
+            Analyser un autre site
           </Link>
         </p>
       </main>

@@ -5,9 +5,9 @@ import { HeroProductMock } from "@/components/hero-product-mock";
 import { SiteHeader } from "@/components/site-header";
 
 export const metadata: Metadata = {
-  title: "SEO Copilot — Audit SEO gratuit de votre page d'accueil",
+  title: "SEO Copilot — Faites trouver votre entreprise sur Google",
   description:
-    "Collez votre domaine, obtenez un score et des corrections IA. Gratuit, sans compte.",
+    "Entrez votre site. Recevez un score clair et des corrections prêtes à appliquer. Gratuit, sans compte.",
 };
 
 export default function HomePage() {
@@ -27,10 +27,11 @@ export default function HomePage() {
             SEO Copilot
           </p>
           <h1 className="animate-rise-delay-1 mt-6 max-w-xl text-2xl font-medium leading-snug text-white/90 sm:text-3xl">
-            Audit SEO gratuit — sans compte
+            Faites trouver votre entreprise sur Google
           </h1>
           <p className="animate-rise-delay-2 mt-4 max-w-lg text-base leading-relaxed text-white/55 sm:text-lg">
-            Collez votre domaine. Score + actions prioritaires + correctifs IA.
+            Entrez votre site. Recevez un score clair et des corrections prêtes à
+            appliquer.
           </p>
           <div className="animate-rise-delay-3 mt-10 max-w-xl">
             <DomainAuditForm variant="hero" />
@@ -39,10 +40,10 @@ export default function HomePage() {
 
         <footer className="relative z-10 border-t border-white/10 py-6">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 text-sm text-white/45 sm:px-6">
-            <p>Gratuit · Homepage technique</p>
+            <p>Gratuit · Sans inscription</p>
             <Link
               href="/audits/demo"
-              className="underline-offset-2 hover:text-white/80 hover:underline"
+              className="text-white/35 underline-offset-2 hover:text-white/70 hover:underline"
             >
               Voir un exemple
             </Link>

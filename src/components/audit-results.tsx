@@ -10,6 +10,7 @@ import { ScoreRing } from "@/components/score-ring";
 import type { AuditView } from "@/lib/audits/get-audit";
 import type { AuditIssue } from "@/lib/audits/issue-schema";
 import { topIssueIds } from "@/lib/ai/pipeline/prioritize";
+import { frameScoreMessage } from "@/lib/copy/score-framing";
 
 type AuditResultsProps = {
   initialAudit: AuditView;
@@ -94,11 +95,12 @@ export function AuditResults({
     return (
       <div className="space-y-4" role="alert">
         <p className="text-sm text-muted-foreground">{initialAudit.domain}</p>
-        <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight sm:text-4xl">
-          Impossible d&apos;auditer ce site
+          <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight sm:text-4xl">
+          On n&apos;a pas pu analyser ce site
         </h1>
         <p className="max-w-xl text-muted-foreground">
-          {initialAudit.errorMessage ?? "Une erreur est survenue."}
+          {initialAudit.errorMessage ??
+            "Réessayez dans un instant, ou vérifiez que l’adresse est accessible."}
         </p>
       </div>
     );
@@ -163,9 +165,11 @@ export function AuditResults({
             Votre score
           </h1>
           <p className="max-w-xl text-muted-foreground">
-            {initialAudit.issues.length === 0
-              ? "Rien de bloquant sur la page d'accueil."
-              : `${initialAudit.issues.length} point(s) à améliorer — commencez par ceux-ci.`}
+            {typeof initialAudit.score === "number"
+              ? frameScoreMessage(initialAudit.score)
+              : initialAudit.issues.length === 0
+                ? "Belle base sur les contrôles essentiels de la page d’accueil."
+                : "Voici les leviers les plus utiles pour progresser."}
           </p>
         </div>
         {typeof initialAudit.score === "number" && (
@@ -179,7 +183,7 @@ export function AuditResults({
             id="priority-actions"
             className="font-[family-name:var(--font-display)] text-2xl font-semibold"
           >
-            À faire en premier
+            Commencez par ici
           </h2>
           <div className="space-y-4">{priorityIssues.map(renderIssue)}</div>
         </section>
@@ -189,7 +193,7 @@ export function AuditResults({
         <details className="group space-y-4">
           <summary className="cursor-pointer font-[family-name:var(--font-display)] text-xl font-semibold list-none [&::-webkit-details-marker]:hidden">
             <span className="underline-offset-4 group-open:underline">
-              Autres points ({otherIssues.length})
+              Ensuite ({otherIssues.length})
             </span>
           </summary>
           <div className="space-y-4 pt-2">{otherIssues.map(renderIssue)}</div>
@@ -198,8 +202,8 @@ export function AuditResults({
 
       {initialAudit.issues.length === 0 && (
         <p className="text-muted-foreground">
-          Tout est bon sur les contrôles de base. Relancez un audit après vos
-          prochaines modifs.
+          Bravo — les contrôles de base sont solides. Relancez un audit après vos
+          prochaines améliorations.
         </p>
       )}
     </div>

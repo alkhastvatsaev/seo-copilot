@@ -8,9 +8,9 @@ import type { AuditIssue } from "@/lib/audits/issue-schema";
 const issue: AuditIssue = {
   id: "missing_title",
   code: "missing_title",
-  title: "Balise title manquante",
-  why: "Le title est critique.",
-  impact: "CTR faible.",
+  title: "Titre de page à ajouter",
+  why: "Le title est ce que vos clients voient en premier.",
+  impact: "Moins de contrôle sur le message dans Google.",
   priority: "critical",
   effort: "low",
   difficulty: "low",
@@ -24,7 +24,7 @@ describe("buildFixIssuePrompt", () => {
     const prompt = buildFixIssuePrompt({ domain: "exemple.com", issue });
     expect(prompt).toContain("exemple.com");
     expect(prompt).toContain("missing_title");
-    expect(prompt).toContain("Balise title manquante");
+    expect(prompt).toContain("Titre de page à ajouter");
     expect(prompt).toContain(`Prompt version: ${FIX_PROMPT_VERSION}`);
   });
 });
