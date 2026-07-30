@@ -1,6 +1,7 @@
 import type { AuditResult } from "@/lib/audits/issue-schema";
 import {
   analyzePageExtract,
+  analyzeSecondaryPage,
   analyzeSiteExtracts,
 } from "@/lib/ai/pipeline/analyze";
 import { extractPageSignals } from "@/lib/ai/pipeline/extract";
@@ -16,9 +17,11 @@ export function runSiteAudit(input: {
   pages: CrawledPage[];
   pageSpeed?: PageSpeedSnapshot | null;
 }): AuditResult {
-  const pageIssues = input.pages.flatMap((page) =>
-    analyzePageExtract(page.extract),
-  );
+  const [home, ...rest] = input.pages;
+  const pageIssues = [
+    ...(home ? analyzePageExtract(home.extract) : []),
+    ...rest.flatMap((page) => analyzeSecondaryPage(page.extract)),
+  ];
   const siteIssues = analyzeSiteExtracts(input.pages.map((p) => p.extract));
   const cwvIssues = input.pageSpeed
     ? analyzePageSpeed(input.pageSpeed)

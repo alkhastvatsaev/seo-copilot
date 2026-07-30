@@ -473,3 +473,41 @@ export function analyzeSiteExtracts(pages: PageExtract[]): AuditIssue[] {
 
   return issues;
 }
+
+/**
+ * Lightweight checks for secondary URLs in the sample (avoid SPA shell noise).
+ */
+export function analyzeSecondaryPage(extract: PageExtract): AuditIssue[] {
+  const issues: AuditIssue[] = [];
+  if (!extract.title) {
+    issues.push(
+      issue({
+        id: pageScopedId("missing_title", extract),
+        code: "missing_title",
+        title: "Titre manquant sur une page du site",
+        why: `Pas de <title> sur ${extract.finalUrl}.`,
+        impact: "Page difficile à identifier dans les résultats.",
+        priority: "medium",
+        effort: "low",
+        difficulty: "low",
+        howToFix: "Ajoutez un title unique et descriptif.",
+      }),
+    );
+  }
+  if (extract.status >= 400) {
+    issues.push(
+      issue({
+        id: pageScopedId("http_error", extract),
+        code: "http_error",
+        title: `Page en erreur HTTP ${extract.status}`,
+        why: `${extract.finalUrl} ne répond pas correctement.`,
+        impact: "Mauvaise expérience et budget de crawl gaspillé.",
+        priority: "high",
+        effort: "medium",
+        difficulty: "medium",
+        howToFix: "Corrigez ou retirez le lien vers cette URL.",
+      }),
+    );
+  }
+  return issues;
+}
