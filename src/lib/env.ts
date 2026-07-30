@@ -36,6 +36,7 @@ const serverSchema = z.object({
     emptyToUndefined,
     z.string().min(1).optional(),
   ),
+  PAGESPEED_API_KEY: z.preprocess(emptyToUndefined, z.string().optional()),
 });
 
 export type ServerEnv = z.infer<typeof serverSchema>;

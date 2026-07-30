@@ -18,7 +18,7 @@ test("landing is a single CTA: brand + domain + score desire", async ({
     page.getByRole("button", { name: /voir mon score/i }),
   ).toBeVisible();
   await expect(
-    page.getByText(/gratuit · page d’accueil · sans inscription/i),
+    page.getByText(/gratuit · échantillon de pages · sans inscription/i),
   ).toBeVisible();
   await expect(page.getByRole("button", { name: /connexion/i })).toHaveCount(0);
   await expect(

@@ -1,7 +1,9 @@
-import { runDeterministicAudit } from "@/lib/ai/pipeline/run-deterministic-audit";
+import { runSiteAudit } from "@/lib/ai/pipeline/run-deterministic-audit";
 import { getAuditRecord, updateAuditRecord } from "@/lib/audits/repository";
-import { CrawlError, fetchHomepage } from "@/lib/crawl/fetch-page";
+import { CrawlError } from "@/lib/crawl/fetch-page";
+import { crawlSite } from "@/lib/crawl/site-crawl";
 import { logger } from "@/lib/logger";
+import { fetchPageSpeedSnapshot } from "@/lib/performance/pagespeed";
 
 export async function executeAuditRun(input: {
   auditId: string;
@@ -20,13 +22,12 @@ export async function executeAuditRun(input: {
   });
 
   try {
-    const page = await fetchHomepage(domain);
-    const result = runDeterministicAudit({
-      html: page.html,
-      url: page.url,
-      finalUrl: page.finalUrl,
-      status: page.status,
-    });
+    const pages = await crawlSite(domain);
+    const homepageUrl = pages[0]?.extract.finalUrl ?? `https://${domain}/`;
+
+    const pageSpeed = await fetchPageSpeedSnapshot(homepageUrl);
+
+    const result = runSiteAudit({ pages, pageSpeed });
 
     await updateAuditRecord(input.auditId, {
       status: "completed",
@@ -42,6 +43,8 @@ export async function executeAuditRun(input: {
         domain,
         score: result.score,
         issueCount: result.issues.length,
+        pageCount: pages.length,
+        hasPageSpeed: Boolean(pageSpeed),
       },
       "audit completed",
     );

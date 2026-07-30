@@ -1,9 +1,43 @@
 import type { AuditResult } from "@/lib/audits/issue-schema";
-import { analyzePageExtract } from "./analyze";
-import { extractPageSignals } from "./extract";
-import { prioritizeIssues, topIssueIds } from "./prioritize";
-import { scoreIssues } from "./score";
+import {
+  analyzePageExtract,
+  analyzeSiteExtracts,
+} from "@/lib/ai/pipeline/analyze";
+import { extractPageSignals } from "@/lib/ai/pipeline/extract";
+import { prioritizeIssues, topIssueIds } from "@/lib/ai/pipeline/prioritize";
+import { scoreIssues } from "@/lib/ai/pipeline/score";
+import type { CrawledPage } from "@/lib/crawl/site-crawl";
+import {
+  analyzePageSpeed,
+  type PageSpeedSnapshot,
+} from "@/lib/performance/pagespeed";
 
+export function runSiteAudit(input: {
+  pages: CrawledPage[];
+  pageSpeed?: PageSpeedSnapshot | null;
+}): AuditResult {
+  const pageIssues = input.pages.flatMap((page) =>
+    analyzePageExtract(page.extract),
+  );
+  const siteIssues = analyzeSiteExtracts(input.pages.map((p) => p.extract));
+  const cwvIssues = input.pageSpeed
+    ? analyzePageSpeed(input.pageSpeed)
+    : [];
+
+  const issues = prioritizeIssues([
+    ...pageIssues,
+    ...siteIssues,
+    ...cwvIssues,
+  ]);
+
+  return {
+    score: scoreIssues(issues),
+    issues,
+    topIssueIds: topIssueIds(issues),
+  };
+}
+
+/** Backward-compatible single-page entry (tests / fixtures). */
 export function runDeterministicAudit(input: {
   html: string;
   url: string;
@@ -11,10 +45,8 @@ export function runDeterministicAudit(input: {
   status: number;
 }): AuditResult {
   const extract = extractPageSignals(input);
-  const issues = prioritizeIssues(analyzePageExtract(extract));
-  return {
-    score: scoreIssues(issues, extract),
-    issues,
-    topIssueIds: topIssueIds(issues),
-  };
+  return runSiteAudit({
+    pages: [{ extract, html: input.html }],
+    pageSpeed: null,
+  });
 }

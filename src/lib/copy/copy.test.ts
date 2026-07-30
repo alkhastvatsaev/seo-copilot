@@ -7,8 +7,8 @@ import {
 import { frameScoreMessage } from "@/lib/copy/score-framing";
 
 describe("frameScoreMessage", () => {
-  it("appreciates high scores first", () => {
-    expect(frameScoreMessage(92)).toMatch(/belle base/i);
+  it("is honest about high scores", () => {
+    expect(frameScoreMessage(92)).toMatch(/technique|échantillon|autorité/i);
   });
 
   it("encourages mid scores without condemning", () => {

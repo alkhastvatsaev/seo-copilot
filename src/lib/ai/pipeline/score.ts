@@ -1,43 +1,24 @@
 import type { AuditIssue, IssuePriority } from "@/lib/audits/issue-schema";
-import type { PageExtract } from "./extract";
 
 const PENALTY: Record<IssuePriority, number> = {
-  critical: 18,
-  high: 7,
-  medium: 4,
+  critical: 22,
+  high: 10,
+  medium: 5,
   low: 2,
 };
 
-const CRITICAL_CODES = new Set(["http_error", "no_https", "missing_title"]);
-
-function passesTechnicalFoundation(extract: PageExtract, issues: AuditIssue[]) {
-  const hasBlockingCritical = issues.some(
-    (issue) => issue.priority === "critical" && CRITICAL_CODES.has(issue.code),
-  );
-  if (hasBlockingCritical) return false;
-
-  const viewportOk =
-    extract.hasViewport ||
-    extract.isUtilityHomepage ||
-    issues.every((issue) => issue.code !== "missing_viewport");
-
-  return (
-    extract.isHttps &&
-    extract.status >= 200 &&
-    extract.status < 400 &&
-    Boolean(extract.title) &&
-    viewportOk
-  );
-}
+const CRITICAL_CODES = new Set([
+  "http_error",
+  "no_https",
+  "missing_title",
+  "meta_noindex",
+]);
 
 /**
- * Deterministic checklist score for a homepage crawl — not a global SEO authority score.
- * Penalties are capped so several "nice to have" issues cannot collapse credible sites to ~40.
+ * Deterministic technical SEO score for crawled pages — not a global authority score.
+ * No artificial high floors: empty issue list can reach 100 only if checks ran clean.
  */
-export function scoreIssues(
-  issues: AuditIssue[],
-  extract?: PageExtract,
-): number {
+export function scoreIssues(issues: AuditIssue[]): number {
   if (issues.length === 0) return 100;
 
   const blockingCritical = issues.filter(
@@ -48,30 +29,22 @@ export function scoreIssues(
       (sum, issue) => sum + PENALTY[issue.priority],
       0,
     );
-    return Math.max(0, Math.min(55, 100 - penalty));
+    return Math.max(5, Math.min(45, 100 - penalty));
   }
 
-  let penalty = issues.reduce(
-    (sum, issue) => sum + PENALTY[issue.priority],
-    0,
-  );
-  penalty = Math.min(penalty, 28);
-
-  let score = 100 - penalty;
-
-  if (extract && passesTechnicalFoundation(extract, issues)) {
-    score = Math.max(score, 78);
-    const noHigh = !issues.some((issue) => issue.priority === "high");
-    if (noHigh) {
-      score = Math.max(score, 88);
+  // Dedupe by code family so multipage repeats don't destroy the score unfairly.
+  const seen = new Set<string>();
+  let penalty = 0;
+  for (const issue of issues) {
+    const family = issue.code;
+    if (seen.has(family)) {
+      penalty += Math.max(1, Math.floor(PENALTY[issue.priority] / 3));
+      continue;
     }
-    const onlyLowMedium = issues.every(
-      (issue) => issue.priority === "low" || issue.priority === "medium",
-    );
-    if (onlyLowMedium) {
-      score = Math.max(score, 85);
-    }
+    seen.add(family);
+    penalty += PENALTY[issue.priority];
   }
 
-  return Math.max(0, Math.min(100, score));
+  penalty = Math.min(penalty, 72);
+  return Math.max(0, Math.min(100, 100 - penalty));
 }

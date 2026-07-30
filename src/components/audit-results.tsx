@@ -10,7 +10,7 @@ import { ScoreRing } from "@/components/score-ring";
 import type { AuditView } from "@/lib/audits/get-audit";
 import type { AuditIssue } from "@/lib/audits/issue-schema";
 import { topIssueIds } from "@/lib/ai/pipeline/prioritize";
-import { frameScoreMessage } from "@/lib/copy/score-framing";
+import { frameScoreMessage, SCORE_SCOPE_LABEL } from "@/lib/copy/score-framing";
 
 type AuditResultsProps = {
   initialAudit: AuditView;
@@ -164,12 +164,15 @@ export function AuditResults({
           <h1 className="font-[family-name:var(--font-display)] text-4xl font-bold tracking-tight sm:text-5xl">
             Votre score
           </h1>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            {SCORE_SCOPE_LABEL}
+          </p>
           <p className="max-w-xl text-muted-foreground">
             {typeof initialAudit.score === "number"
               ? frameScoreMessage(initialAudit.score)
               : initialAudit.issues.length === 0
-                ? "Belle base sur les contrôles essentiels de la page d’accueil."
-                : "Voici les leviers les plus utiles pour progresser."}
+                ? "Les contrôles techniques de l’échantillon sont verts — ce n’est pas une note d’autorité globale."
+                : "Voici les leviers techniques les plus utiles pour progresser."}
           </p>
         </div>
         {typeof initialAudit.score === "number" && (
@@ -202,8 +205,9 @@ export function AuditResults({
 
       {initialAudit.issues.length === 0 && (
         <p className="text-muted-foreground">
-          Bravo — les contrôles de base sont solides. Relancez un audit après vos
-          prochaines améliorations.
+          Aucun écart sur les contrôles techniques de cet échantillon (pages
+          crawlées + perf lab si disponible). Ce score ne mesure pas backlinks,
+          E-E-A-T ni la concurrence.
         </p>
       )}
     </div>

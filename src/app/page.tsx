@@ -30,8 +30,8 @@ export default function HomePage() {
             Faites trouver votre entreprise sur Google
           </h1>
           <p className="animate-rise-delay-1 mt-4 max-w-lg text-base leading-relaxed text-white/55 sm:text-lg">
-            Entrez votre site. Recevez un score clair et des corrections pour
-            votre page d’accueil.
+            Entrez votre site. Crawl de plusieurs pages, checklist technique,
+            perf lab — corrections prêtes à appliquer.
           </p>
           <div className="animate-rise-delay-2 mt-10 max-w-xl">
             <DomainAuditForm variant="hero" />
@@ -42,7 +42,7 @@ export default function HomePage() {
 
         <footer className="relative z-10 border-t border-white/10 py-6">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 text-sm text-white/45 sm:px-6">
-            <p>Gratuit · Page d’accueil · Sans inscription</p>
+            <p>Gratuit · Échantillon de pages · Sans inscription</p>
             <Link
               href="/audits/demo"
               className="text-white/35 underline-offset-2 hover:text-white/70 hover:underline"

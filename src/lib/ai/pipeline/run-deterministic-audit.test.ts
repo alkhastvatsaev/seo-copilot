@@ -8,6 +8,7 @@ import {
 import { scoreIssues } from "@/lib/ai/pipeline/score";
 import { prioritizeIssues } from "@/lib/ai/pipeline/prioritize";
 import type { AuditIssue } from "@/lib/audits/issue-schema";
+import { analyzePageSpeed } from "@/lib/performance/pagespeed";
 
 describe("runDeterministicAudit", () => {
   it("flags missing SEO basics on a broken page", () => {
@@ -24,7 +25,10 @@ describe("runDeterministicAudit", () => {
     expect(codes).toContain("multiple_h1");
     expect(codes).toContain("missing_viewport");
     expect(codes).toContain("images_missing_alt");
-    expect(result.score).toBeLessThan(100);
+    expect(codes).toContain("missing_html_lang");
+    expect(codes).toContain("incomplete_open_graph");
+    expect(codes).toContain("thin_content");
+    expect(result.score).toBeLessThan(70);
     expect(result.topIssueIds).toHaveLength(3);
   });
 
@@ -48,8 +52,11 @@ describe("runDeterministicAudit", () => {
       status: 200,
     });
 
-    expect(result.score).toBeGreaterThanOrEqual(85);
+    expect(result.score).toBeGreaterThanOrEqual(80);
     expect(result.issues.every((i) => i.priority !== "critical")).toBe(true);
+    expect(result.issues.some((i) => i.code === "spa_shell_thin_html")).toBe(
+      false,
+    );
   });
 
   it("penalizes http final URL", () => {
@@ -79,7 +86,7 @@ describe("scoreIssues + prioritizeIssues", () => {
     },
     {
       id: "b",
-      code: "b",
+      code: "missing_title",
       title: "B",
       why: "w",
       impact: "i",
@@ -94,7 +101,21 @@ describe("scoreIssues + prioritizeIssues", () => {
     expect(prioritizeIssues(sample)[0]?.id).toBe("b");
   });
 
-  it("applies deterministic penalties with cap", () => {
-    expect(scoreIssues(sample)).toBe(100 - 18 - 2);
+  it("caps critical foundation failures", () => {
+    expect(scoreIssues(sample)).toBeLessThanOrEqual(45);
+  });
+});
+
+describe("analyzePageSpeed", () => {
+  it("flags slow LCP", () => {
+    const issues = analyzePageSpeed({
+      performanceScore: 40,
+      lcpMs: 4200,
+      cls: 0.05,
+      inpMs: 150,
+      overallCategory: null,
+    });
+    expect(issues.some((i) => i.code === "cwv_lcp_slow")).toBe(true);
+    expect(issues.some((i) => i.code === "cwv_performance_low")).toBe(true);
   });
 });
