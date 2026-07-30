@@ -1,4 +1,4 @@
-/** Browser-safe hostname SSRF checks (no Node builtins). */
+/** Browser-safe hostname / IP SSRF checks (no Node builtins). */
 
 const BLOCKED_HOST_SUFFIXES = [
   ".localhost",
@@ -17,7 +17,7 @@ const BLOCKED_HOSTS = new Set([
   "metadata.google",
 ]);
 
-function isIpv4Literal(host: string): boolean {
+export function isIpv4Literal(host: string): boolean {
   const parts = host.split(".");
   if (parts.length !== 4) return false;
   return parts.every((part) => {
@@ -27,7 +27,7 @@ function isIpv4Literal(host: string): boolean {
   });
 }
 
-function isPrivateIpv4(ip: string): boolean {
+export function isPrivateIpv4(ip: string): boolean {
   const parts = ip.split(".").map(Number);
   const [a, b] = parts as [number, number, number, number];
   if (a === 10) return true;
@@ -40,7 +40,7 @@ function isPrivateIpv4(ip: string): boolean {
   return false;
 }
 
-function isPrivateIpv6(ip: string): boolean {
+export function isPrivateIpv6(ip: string): boolean {
   const normalized = ip.toLowerCase();
   if (normalized === "::1" || normalized === "::") return true;
   if (normalized.startsWith("fc") || normalized.startsWith("fd")) return true;
@@ -49,11 +49,25 @@ function isPrivateIpv6(ip: string): boolean {
     const v4 = normalized.slice(7);
     if (isIpv4Literal(v4)) return isPrivateIpv4(v4);
   }
+  // IPv4-mapped :ffff:a.b.c.d
+  const mapped = normalized.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
+  if (mapped?.[1] && isIpv4Literal(mapped[1])) {
+    return isPrivateIpv4(mapped[1]);
+  }
   return false;
 }
 
 function looksLikeIpv6(host: string): boolean {
   return host.includes(":");
+}
+
+/** True if a resolved address must not be contacted. */
+export function isBlockedIpAddress(ip: string): boolean {
+  const address = ip.trim().toLowerCase();
+  if (!address) return true;
+  if (isIpv4Literal(address)) return isPrivateIpv4(address);
+  if (looksLikeIpv6(address)) return isPrivateIpv6(address);
+  return true;
 }
 
 /** Returns true if hostname must not be crawled (SSRF). */

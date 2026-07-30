@@ -10,5 +10,8 @@ describe("getDemoAudit", () => {
     expect(audit.score).toBeGreaterThanOrEqual(0);
     expect(audit.score).toBeLessThanOrEqual(100);
     expect(audit.issues[0]?.priority).toBe("high");
+    expect(
+      audit.issues.find((i) => i.code === "missing_meta_description")?.priority,
+    ).toBe("medium");
   });
 });

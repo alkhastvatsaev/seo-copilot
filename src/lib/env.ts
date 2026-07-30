@@ -16,6 +16,19 @@ const serverSchema = z.object({
   SENTRY_DSN: z.preprocess(emptyToUndefined, z.url().optional()),
   INNGEST_EVENT_KEY: z.preprocess(emptyToUndefined, z.string().optional()),
   INNGEST_SIGNING_KEY: z.preprocess(emptyToUndefined, z.string().optional()),
+  AUDIT_STORE: z.preprocess(
+    emptyToUndefined,
+    z.enum(["memory", "postgres"]).optional(),
+  ),
+  TRUST_PROXY: z.preprocess(emptyToUndefined, z.enum(["0", "1"]).optional()),
+  UPSTASH_REDIS_REST_URL: z.preprocess(
+    emptyToUndefined,
+    z.url().optional(),
+  ),
+  UPSTASH_REDIS_REST_TOKEN: z.preprocess(
+    emptyToUndefined,
+    z.string().min(1).optional(),
+  ),
 });
 
 export type ServerEnv = z.infer<typeof serverSchema>;

@@ -23,7 +23,7 @@ export async function GET(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const rate = checkRateLimit(`audit-get:${getClientIp(request)}`, {
+  const rate = await checkRateLimit(`audit-get:${getClientIp(request)}`, {
     limit: 60,
     windowMs: 60_000,
   });

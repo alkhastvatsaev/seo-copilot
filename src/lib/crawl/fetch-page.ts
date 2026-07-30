@@ -1,10 +1,14 @@
-import {
-  CRAWLER_USER_AGENT,
-  MAX_HTML_BYTES,
-  PAGE_FETCH_TIMEOUT_MS,
-} from "./constants";
+import { MAX_HTML_BYTES } from "./constants";
 import { isUrlAllowedByRobots } from "./robots";
-import { assertPublicHostname, assertPublicHttpUrl } from "./ssrf";
+import {
+  fetchWithSafeRedirects,
+  SafeFetchError,
+} from "./safe-fetch";
+import {
+  assertHostnameResolvesPublic,
+  assertPublicHostname,
+  type ResolveAddresses,
+} from "./ssrf";
 
 export type FetchedPage = {
   url: string;
@@ -30,43 +34,33 @@ export class CrawlError extends Error {
   }
 }
 
-async function fetchWithTimeout(
-  url: string,
-  fetchImpl: typeof fetch,
-): Promise<Response> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), PAGE_FETCH_TIMEOUT_MS);
-
-  try {
-    return await fetchImpl(url, {
-      signal: controller.signal,
-      headers: {
-        "User-Agent": CRAWLER_USER_AGENT,
-        Accept: "text/html,application/xhtml+xml",
-      },
-      redirect: "follow",
-    });
-  } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      throw new CrawlError("Timeout lors du fetch de la page.", "TIMEOUT");
+function mapSafeFetchError(error: unknown): CrawlError {
+  if (error instanceof SafeFetchError) {
+    if (error.code === "SSRF_BLOCKED") {
+      return new CrawlError(error.message, "SSRF_BLOCKED");
     }
-    throw new CrawlError("Impossible de récupérer la page.", "FETCH_FAILED");
-  } finally {
-    clearTimeout(timer);
+    if (error.code === "TIMEOUT") {
+      return new CrawlError(error.message, "TIMEOUT");
+    }
+    return new CrawlError(error.message, "FETCH_FAILED");
   }
+  return new CrawlError("Impossible de récupérer la page.", "FETCH_FAILED");
 }
 
 export async function fetchHomepage(
   domain: string,
   fetchImpl: typeof fetch = fetch,
+  resolveAddresses?: ResolveAddresses,
 ): Promise<FetchedPage> {
   try {
     assertPublicHostname(domain);
-  } catch {
-    throw new CrawlError(
-      "Ce domaine n'est pas autorisé pour un audit.",
-      "SSRF_BLOCKED",
-    );
+    await assertHostnameResolvesPublic(domain, resolveAddresses);
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Ce domaine n'est pas autorisé pour un audit.";
+    throw new CrawlError(message, "SSRF_BLOCKED");
   }
 
   const httpsOrigin = `https://${domain}`;
@@ -78,6 +72,7 @@ export async function fetchHomepage(
     httpsOrigin,
     httpsUrl,
     fetchImpl,
+    resolveAddresses,
   );
   if (!httpsAllowed) {
     throw new CrawlError(
@@ -86,14 +81,18 @@ export async function fetchHomepage(
     );
   }
 
-  let response: Response;
+  let result: Awaited<ReturnType<typeof fetchWithSafeRedirects>>;
   try {
-    response = await fetchWithTimeout(httpsUrl, fetchImpl);
+    result = await fetchWithSafeRedirects(httpsUrl, {
+      fetchImpl,
+      resolveAddresses,
+    });
   } catch (httpsError) {
     const httpAllowed = await isUrlAllowedByRobots(
       httpOrigin,
       httpUrl,
       fetchImpl,
+      resolveAddresses,
     );
     if (!httpAllowed) {
       throw new CrawlError(
@@ -102,14 +101,23 @@ export async function fetchHomepage(
       );
     }
     try {
-      response = await fetchWithTimeout(httpUrl, fetchImpl);
+      result = await fetchWithSafeRedirects(httpUrl, {
+        fetchImpl,
+        resolveAddresses,
+      });
     } catch {
-      throw httpsError;
+      throw mapSafeFetchError(httpsError);
     }
   }
 
+  const { response, finalUrl } = result;
+
   const contentType = response.headers.get("content-type") ?? "";
-  if (contentType && !contentType.includes("text/html") && !contentType.includes("application/xhtml")) {
+  if (
+    contentType &&
+    !contentType.includes("text/html") &&
+    !contentType.includes("application/xhtml")
+  ) {
     throw new CrawlError(
       "La réponse n'est pas du HTML.",
       "INVALID_CONTENT",
@@ -127,15 +135,6 @@ export async function fetchHomepage(
   }
 
   const html = new TextDecoder("utf-8").decode(buffer);
-  const finalUrl = response.url || httpsUrl;
-  try {
-    assertPublicHttpUrl(finalUrl);
-  } catch {
-    throw new CrawlError(
-      "La redirection mène vers une cible non autorisée.",
-      "SSRF_BLOCKED",
-    );
-  }
 
   return {
     url: httpsUrl,

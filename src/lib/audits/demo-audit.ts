@@ -10,7 +10,7 @@ const demoIssues: AuditIssue[] = [
     title: "Description Google à rédiger",
     why: "La meta description est votre courte invitation au clic — sans elle, Google choisit souvent un extrait au hasard.",
     impact: "Moins de contrôle sur le message qui convainc vos futurs clients.",
-    priority: "high",
+    priority: "medium",
     effort: "low",
     difficulty: "low",
     howToFix:

@@ -1,25 +1,34 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import {
   checkRateLimit,
+  checkRateLimitMemory,
   getClientIp,
   resetRateLimitStore,
 } from "@/lib/rate-limit";
 
-describe("checkRateLimit", () => {
+describe("checkRateLimitMemory", () => {
   beforeEach(() => {
     resetRateLimitStore();
   });
 
   it("allows requests under the limit", () => {
-    const first = checkRateLimit("k", { limit: 2, windowMs: 60_000 }, 1_000);
-    const second = checkRateLimit("k", { limit: 2, windowMs: 60_000 }, 1_100);
+    const first = checkRateLimitMemory("k", { limit: 2, windowMs: 60_000 }, 1_000);
+    const second = checkRateLimitMemory(
+      "k",
+      { limit: 2, windowMs: 60_000 },
+      1_100,
+    );
     expect(first).toEqual({ ok: true, remaining: 1 });
     expect(second).toEqual({ ok: true, remaining: 0 });
   });
 
   it("blocks when the limit is exceeded", () => {
-    checkRateLimit("k", { limit: 1, windowMs: 60_000 }, 1_000);
-    const blocked = checkRateLimit("k", { limit: 1, windowMs: 60_000 }, 1_500);
+    checkRateLimitMemory("k", { limit: 1, windowMs: 60_000 }, 1_000);
+    const blocked = checkRateLimitMemory(
+      "k",
+      { limit: 1, windowMs: 60_000 },
+      1_500,
+    );
     expect(blocked.ok).toBe(false);
     if (!blocked.ok) {
       expect(blocked.retryAfterSec).toBeGreaterThan(0);
@@ -27,9 +36,28 @@ describe("checkRateLimit", () => {
   });
 
   it("resets after the window", () => {
-    checkRateLimit("k", { limit: 1, windowMs: 1_000 }, 1_000);
-    const after = checkRateLimit("k", { limit: 1, windowMs: 1_000 }, 2_100);
+    checkRateLimitMemory("k", { limit: 1, windowMs: 1_000 }, 1_000);
+    const after = checkRateLimitMemory("k", { limit: 1, windowMs: 1_000 }, 2_100);
     expect(after.ok).toBe(true);
+  });
+});
+
+describe("checkRateLimit", () => {
+  beforeEach(() => {
+    resetRateLimitStore();
+  });
+
+  it("falls back to memory when Upstash is unset", async () => {
+    const first = await checkRateLimit("async-k", {
+      limit: 1,
+      windowMs: 60_000,
+    });
+    const second = await checkRateLimit("async-k", {
+      limit: 1,
+      windowMs: 60_000,
+    });
+    expect(first.ok).toBe(true);
+    expect(second.ok).toBe(false);
   });
 });
 

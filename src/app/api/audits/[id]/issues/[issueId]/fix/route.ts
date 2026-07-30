@@ -28,7 +28,7 @@ export async function POST(
     return apiError("VALIDATION_ERROR", "Paramètres invalides.", 400);
   }
 
-  const rate = checkRateLimit(`ai-fix:${getClientIp(request)}`, {
+  const rate = await checkRateLimit(`ai-fix:${getClientIp(request)}`, {
     limit: 10,
     windowMs: 60_000,
   });

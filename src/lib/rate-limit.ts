@@ -1,3 +1,7 @@
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+import { env } from "@/lib/env";
+
 export type RateLimitOptions = {
   limit: number;
   windowMs: number;
@@ -13,8 +17,33 @@ type Bucket = {
 
 const buckets = new Map<string, Bucket>();
 
-/** Sliding-window rate limiter (in-memory). Suitable for single-instance MVP. */
-export function checkRateLimit(
+const upstashLimiters = new Map<string, Ratelimit>();
+
+function upstashConfigured(): boolean {
+  return Boolean(env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN);
+}
+
+function getUpstashLimiter(options: RateLimitOptions): Ratelimit {
+  const windowSec = Math.max(1, Math.ceil(options.windowMs / 1000));
+  const cacheKey = `${options.limit}:${windowSec}`;
+  const existing = upstashLimiters.get(cacheKey);
+  if (existing) return existing;
+
+  const redis = new Redis({
+    url: env.UPSTASH_REDIS_REST_URL!,
+    token: env.UPSTASH_REDIS_REST_TOKEN!,
+  });
+  const limiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(options.limit, `${windowSec} s`),
+    prefix: "seo-copilot",
+  });
+  upstashLimiters.set(cacheKey, limiter);
+  return limiter;
+}
+
+/** Sliding-window rate limiter (in-memory). Used when Upstash is unset. */
+export function checkRateLimitMemory(
   key: string,
   options: RateLimitOptions,
   now = Date.now(),
@@ -38,16 +67,41 @@ export function checkRateLimit(
   return { ok: true, remaining: options.limit - bucket.hits.length };
 }
 
-/** Test helper — clears all buckets. */
+/**
+ * Rate limit — Upstash Redis when configured (multi-instance), else memory.
+ */
+export async function checkRateLimit(
+  key: string,
+  options: RateLimitOptions,
+  now = Date.now(),
+): Promise<RateLimitResult> {
+  if (upstashConfigured()) {
+    const limiter = getUpstashLimiter(options);
+    const result = await limiter.limit(key);
+    if (!result.success) {
+      const retryAfterSec = Math.max(
+        1,
+        Math.ceil((result.reset - Date.now()) / 1000),
+      );
+      return { ok: false, retryAfterSec };
+    }
+    return { ok: true, remaining: result.remaining };
+  }
+
+  return checkRateLimitMemory(key, options, now);
+}
+
+/** Test helper — clears in-memory buckets. */
 export function resetRateLimitStore() {
   buckets.clear();
 }
 
 /**
  * Client IP for rate limiting.
- * Only trusts proxy headers when TRUST_PROXY=1 (set behind a trusted reverse proxy).
+ * Only trusts proxy headers when TRUST_PROXY=1.
  */
 export function getClientIp(request: Request): string {
+  // Read process.env so tests can toggle; Zod validates at boot via env.ts.
   if (process.env.TRUST_PROXY === "1") {
     const forwarded = request.headers.get("x-forwarded-for");
     if (forwarded) {

@@ -14,7 +14,7 @@ import { captureServerException } from "@/lib/sentry/server";
 import { createAuditRequestSchema } from "@/lib/validations/domain";
 
 export async function POST(request: Request) {
-  const rate = checkRateLimit(`audit-create:${getClientIp(request)}`, {
+  const rate = await checkRateLimit(`audit-create:${getClientIp(request)}`, {
     limit: 5,
     windowMs: 60_000,
   });

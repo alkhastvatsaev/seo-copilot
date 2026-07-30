@@ -22,9 +22,7 @@ type DbMode = "unknown" | "ok" | "down";
 let dbMode: DbMode = "unknown";
 
 function forceMemoryStore() {
-  return (
-    env.NODE_ENV === "development" && process.env.AUDIT_STORE === "memory"
-  );
+  return env.NODE_ENV === "development" && env.AUDIT_STORE === "memory";
 }
 
 export async function isDatabaseAvailable(): Promise<boolean> {

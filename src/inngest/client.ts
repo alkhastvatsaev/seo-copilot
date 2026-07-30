@@ -10,6 +10,5 @@ export type AuditRunEvent = {
   name: "audit/run";
   data: {
     auditId: string;
-    domain: string;
   };
 };
