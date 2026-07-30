@@ -63,6 +63,7 @@ async function fetchHtmlPage(
       return null;
     }
     const html = await response.text();
+    if (response.status >= 400) return null;
     return { html, finalUrl, status: response.status };
   } catch (error) {
     if (error instanceof SafeFetchError && error.code === "SSRF_BLOCKED") {
@@ -174,11 +175,12 @@ async function crawlFromHome(
     resolveAddresses,
   );
   const candidates = new Set<string>();
-  for (const loc of fromSitemap) {
-    candidates.add(normalizeUrl(loc));
-  }
+  // Prefer homepage links (user-facing IA) over raw sitemap order.
   for (const link of homeExtract.internalLinks) {
     candidates.add(normalizeUrl(link));
+  }
+  for (const loc of fromSitemap) {
+    candidates.add(normalizeUrl(loc));
   }
   candidates.delete(normalizeUrl(home.finalUrl));
 
@@ -188,15 +190,16 @@ async function crawlFromHome(
     const page = await fetchHtmlPage(url, fetchImpl, resolveAddresses);
     if (!page) return null;
     if (!sameHost(page.finalUrl, home.finalUrl)) return null;
-    return {
-      extract: extractPageSignals({
-        html: page.html,
-        url,
-        finalUrl: page.finalUrl,
-        status: page.status,
-      }),
+    const extract = extractPageSignals({
       html: page.html,
-    } satisfies CrawledPage;
+      url,
+      finalUrl: page.finalUrl,
+      status: page.status,
+    });
+    const robots = extract.robotsMeta?.toLowerCase() ?? "";
+    // Extra pages marked noindex pollute the sample without representing the site UX.
+    if (robots.includes("noindex")) return null;
+    return { extract, html: page.html } satisfies CrawledPage;
   });
 
   const seen = new Set([normalizeUrl(home.finalUrl)]);
