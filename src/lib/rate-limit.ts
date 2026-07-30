@@ -1,6 +1,6 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import { env, getUpstashRedisCredentials } from "@/lib/env";
+import { getUpstashRedisCredentials } from "@/lib/env";
 
 export type RateLimitOptions = {
   limit: number;
