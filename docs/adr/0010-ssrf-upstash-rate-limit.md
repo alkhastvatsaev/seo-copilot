@@ -29,4 +29,5 @@ Vercel instances.
 - Dependency: `@upstash/ratelimit` + `@upstash/redis` (multi-instance RL without
   self-hosted Redis).
 - Crawl unit tests inject `resolveAddresses` to avoid real DNS.
-- Prod: set Upstash + `TRUST_PROXY=1` on Vercel for correct IP keys.
+- Prod: set Upstash (or Vercel Marketplace `KV_REST_API_*`) + `TRUST_PROXY=1`
+  for correct IP keys. Code accepts either credential pair.

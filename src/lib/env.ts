@@ -21,6 +21,7 @@ const serverSchema = z.object({
     z.enum(["memory", "postgres"]).optional(),
   ),
   TRUST_PROXY: z.preprocess(emptyToUndefined, z.enum(["0", "1"]).optional()),
+  /** Classic Upstash names — optional aliases of Vercel marketplace KV_* */
   UPSTASH_REDIS_REST_URL: z.preprocess(
     emptyToUndefined,
     z.url().optional(),
@@ -29,9 +30,31 @@ const serverSchema = z.object({
     emptyToUndefined,
     z.string().min(1).optional(),
   ),
+  /** Vercel Marketplace Upstash Redis injects these */
+  KV_REST_API_URL: z.preprocess(emptyToUndefined, z.url().optional()),
+  KV_REST_API_TOKEN: z.preprocess(
+    emptyToUndefined,
+    z.string().min(1).optional(),
+  ),
 });
 
 export type ServerEnv = z.infer<typeof serverSchema>;
+
+/** Resolved Redis REST credentials (UPSTASH_* or Vercel KV_*). */
+export function getUpstashRedisCredentials(
+  values: Pick<
+    ServerEnv,
+    | "UPSTASH_REDIS_REST_URL"
+    | "UPSTASH_REDIS_REST_TOKEN"
+    | "KV_REST_API_URL"
+    | "KV_REST_API_TOKEN"
+  > = env,
+): { url: string; token: string } | null {
+  const url = values.UPSTASH_REDIS_REST_URL ?? values.KV_REST_API_URL;
+  const token = values.UPSTASH_REDIS_REST_TOKEN ?? values.KV_REST_API_TOKEN;
+  if (!url || !token) return null;
+  return { url, token };
+}
 
 function loadServerEnv(): ServerEnv {
   const parsed = serverSchema.safeParse(process.env);

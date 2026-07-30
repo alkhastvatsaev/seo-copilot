@@ -1,6 +1,6 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import { env } from "@/lib/env";
+import { env, getUpstashRedisCredentials } from "@/lib/env";
 
 export type RateLimitOptions = {
   limit: number;
@@ -20,7 +20,7 @@ const buckets = new Map<string, Bucket>();
 const upstashLimiters = new Map<string, Ratelimit>();
 
 function upstashConfigured(): boolean {
-  return Boolean(env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN);
+  return getUpstashRedisCredentials() !== null;
 }
 
 function getUpstashLimiter(options: RateLimitOptions): Ratelimit {
@@ -29,9 +29,14 @@ function getUpstashLimiter(options: RateLimitOptions): Ratelimit {
   const existing = upstashLimiters.get(cacheKey);
   if (existing) return existing;
 
+  const credentials = getUpstashRedisCredentials();
+  if (!credentials) {
+    throw new Error("Upstash Redis is not configured.");
+  }
+
   const redis = new Redis({
-    url: env.UPSTASH_REDIS_REST_URL!,
-    token: env.UPSTASH_REDIS_REST_TOKEN!,
+    url: credentials.url,
+    token: credentials.token,
   });
   const limiter = new Ratelimit({
     redis,
